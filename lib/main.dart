@@ -1,65 +1,105 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 
-void main() => runApp(new MyApp());
+import 'package:myflutter/main.dart';
+import 'package:http/http.dart' as http;
+import 'package:myflutter/pokemon.dart';
+import 'package:myflutter/pokemondetail.dart';
 
-class MyApp extends StatelessWidget {
+void main() => runApp(MaterialApp(
+  title: "Poke App",
+  home: HomePage(),
+  debugShowCheckedModeBanner: false,
+));
+class HomePage extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return new MaterialApp(
-      title: 'Flutter Demo',
-      theme: new ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: new MyHomePage(title: 'Flutter Demo Home Page'),
-    );
+  HomePageState createState() {
+    return new HomePageState();
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class HomePageState extends State<HomePage> {
+  var url =
+      "https://raw.githubusercontent.com/Biuni/PokemonGO-Pokedex/master/pokedex.json";
 
-  final String title;
+  PokeHub pokeHub;
 
   @override
-  _MyHomePageState createState() => new _MyHomePageState();
-}
+  void initState() {
+    super.initState();
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+    fetchData();
+  }
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  fetchData() async {
+    var res = await http.get(url);
+    var decodedJson = jsonDecode(res.body);
+    pokeHub = PokeHub.fromJson(decodedJson);
+    print(pokeHub.toJson());
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(
-        title: new Text(widget.title),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("Poke App"),
+        backgroundColor: Colors.cyan,
       ),
-      body: new Center(
-
-        child: new Column(
-
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            new Text(
-              'You have pushed the button this many times:',
+      body: pokeHub == null
+          ? Center(
+        child: CircularProgressIndicator(),
+      )
+          : GridView.count(
+        crossAxisCount: 2,
+        children: pokeHub.pokemon
+            .map((poke) => Padding(
+          padding: const EdgeInsets.all(2.0),
+          child: InkWell(
+            onTap: () {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => PokeDetail(
+                        pokemon: poke,
+                      )));
+            },
+            child: Hero(
+              tag: poke.img,
+              child: Card(
+                child: Column(
+                  mainAxisAlignment:
+                  MainAxisAlignment.spaceEvenly,
+                  children: <Widget>[
+                    Container(
+                      height: 100.0,
+                      width: 100.0,
+                      decoration: BoxDecoration(
+                          image: DecorationImage(
+                              image: NetworkImage(poke.img))),
+                    ),
+                    Text(
+                      poke.name,
+                      style: TextStyle(
+                        fontSize: 20.0,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  ],
+                ),
+              ),
             ),
-            new Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.display1,
-            ),
-          ],
-        ),
+          ),
+        ))
+            .toList(),
       ),
-      floatingActionButton: new FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: new Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      drawer: Drawer(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        backgroundColor: Colors.cyan,
+        child: Icon(Icons.refresh),
+      ),
     );
   }
 }
