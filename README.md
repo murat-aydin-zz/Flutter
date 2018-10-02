@@ -1,4 +1,5 @@
-# myflutter
+# My First Flutter App
+Pokemon App
 
 A new Flutter application.
 
